@@ -232,14 +232,14 @@ void protocol_exec_rt_system()
 
       // State check for allowable states for hold methods.
       if (!(sys.state & (STATE_ALARM | STATE_CHECK_MODE))) {
-      
+
         // If in CYCLE or JOG states, immediately initiate a motion HOLD.
         if (sys.state & (STATE_CYCLE | STATE_JOG)) {
           if (!(sys.suspend & (SUSPEND_MOTION_CANCEL | SUSPEND_JOG_CANCEL))) { // Block, if already holding.
             st_update_plan_block_parameters(); // Notify stepper module to recompute for hold deceleration.
             sys.step_control = STEP_CONTROL_EXECUTE_HOLD; // Initiate suspend state with active flag.
             if (sys.state == STATE_JOG) { // Jog cancelled upon any hold event, except for sleeping.
-              if (!(rt_exec & EXEC_SLEEP)) { sys.suspend |= SUSPEND_JOG_CANCEL; } 
+              if (!(rt_exec & EXEC_SLEEP)) { sys.suspend |= SUSPEND_JOG_CANCEL; }
             }
           }
         }
@@ -264,7 +264,7 @@ void protocol_exec_rt_system()
 
       if (rt_exec & EXEC_SLEEP) {
         if (sys.state == STATE_ALARM) { sys.suspend |= (SUSPEND_RETRACT_COMPLETE|SUSPEND_HOLD_COMPLETE); }
-        sys.state = STATE_SLEEP; 
+        sys.state = STATE_SLEEP;
       }
 
       system_clear_exec_state_flag((EXEC_MOTION_CANCEL | EXEC_FEED_HOLD | EXEC_SLEEP));
@@ -381,10 +381,10 @@ static void protocol_exec_rt_suspend()
     // Block until initial hold is complete and the machine has stopped motion.
     if (sys.suspend & SUSPEND_HOLD_COMPLETE) {
 
-      // Parking manager. Handles de/re-energizing, switch state checks, and parking motions for 
+      // Parking manager. Handles de/re-energizing, switch state checks, and parking motions for
       // sleep state.
       if (sys.state & STATE_SLEEP) {
-      
+
         // Handles retraction motions and de-energizing.
         if (bit_isfalse(sys.suspend,SUSPEND_RETRACT_COMPLETE)) {
 

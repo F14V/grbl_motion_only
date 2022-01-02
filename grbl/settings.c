@@ -59,7 +59,7 @@ const __flash settings_t defaults = {\
 void settings_store_startup_line(uint8_t n, char *line)
 {
   #ifdef FORCE_BUFFER_SYNC_DURING_EEPROM_WRITE
-    protocol_buffer_synchronize(); // A startup line may contain a motion and be executing. 
+    protocol_buffer_synchronize(); // A startup line may contain a motion and be executing.
   #endif
   uint32_t addr = n*(LINE_BUFFER_SIZE+1)+EEPROM_ADDR_STARTUP_BLOCK;
   memcpy_to_eeprom_with_checksum(addr,(char*)line, LINE_BUFFER_SIZE);
@@ -97,7 +97,7 @@ void write_global_settings()
 
 // Method to restore EEPROM-saved Grbl global settings back to defaults.
 void settings_restore(uint8_t restore_flag) {
-  if (restore_flag & SETTINGS_RESTORE_DEFAULTS) {    
+  if (restore_flag & SETTINGS_RESTORE_DEFAULTS) {
     settings = defaults;
     write_global_settings();
   }

@@ -108,7 +108,7 @@
 
 // The status report change for Grbl v1.1 and after also removed the ability to disable/enable most data
 // fields from the report. This caused issues for GUI developers, who've had to manage several scenarios
-// and configurations. The increased efficiency of the new reporting style allows for all data fields to 
+// and configurations. The increased efficiency of the new reporting style allows for all data fields to
 // be sent without potential performance issues.
 // NOTE: The options below are here only provide a way to disable certain data fields if a unique
 // situation demands it, but be aware GUIs may depend on this data. If disabled, it may not be compatible.
@@ -296,26 +296,26 @@
 // that any of these commands are used need continuous motions through them.
 #define FORCE_BUFFER_SYNC_DURING_WCO_CHANGE // Default enabled. Comment to disable.
 
-/* --------------------------------------------------------------------------------------- 
-  This optional dual axis feature is primarily for the homing cycle to locate two sides of 
+/* ---------------------------------------------------------------------------------------
+  This optional dual axis feature is primarily for the homing cycle to locate two sides of
   a dual-motor gantry independently, i.e. self-squaring. This requires an additional limit
   switch for the cloned motor. To self square, both limit switches on the cloned axis must
-  be physically positioned to trigger when the gantry is square. Highly recommend keeping  
+  be physically positioned to trigger when the gantry is square. Highly recommend keeping
   the motors always enabled to ensure the gantry stays square with the $1=255 setting.
 
-  For Grbl on the Arduino Uno, the cloned axis limit switch must to be shared with and 
+  For Grbl on the Arduino Uno, the cloned axis limit switch must to be shared with and
   wired with z-axis limit pin due to the lack of available pins. The homing cycle must home
   the z-axis and cloned axis in different cycles, which is already the default config.
 
   The dual axis feature works by cloning an axis step output onto another pair of step
-  and direction pins. The step pulse and direction of the cloned motor can be set 
+  and direction pins. The step pulse and direction of the cloned motor can be set
   independently of the main axis motor. However to save precious flash and memory, this
-  dual axis feature must share the same settings (step/mm, max speed, acceleration) as the 
+  dual axis feature must share the same settings (step/mm, max speed, acceleration) as the
   parent motor. This is NOT a feature for an independent fourth axis. Only a motor clone.
 
   WARNING: Make sure to test the directions of your dual axis motors! They must be setup
   to move the same direction BEFORE running your first homing cycle or any long motion!
-  Motors moving in opposite directions can cause serious damage to your machine! Use this 
+  Motors moving in opposite directions can cause serious damage to your machine! Use this
   dual axis feature at your own risk.
 */
 // NOTE: This feature requires approximately 400 bytes of flash. Certain configurations can
@@ -326,11 +326,11 @@
 #define DUAL_AXIS_SELECT  X_AXIS  // Must be either X_AXIS or Y_AXIS
 
 // To prevent the homing cycle from racking the dual axis, when one limit triggers before the
-// other due to switch failure or noise, the homing cycle will automatically abort if the second 
-// motor's limit switch does not trigger within the three distance parameters defined below. 
+// other due to switch failure or noise, the homing cycle will automatically abort if the second
+// motor's limit switch does not trigger within the three distance parameters defined below.
 // Axis length percent will automatically compute a fail distance as a percentage of the max
-// travel of the other non-dual axis, i.e. if dual axis select is X_AXIS at 5.0%, then the fail 
-// distance will be computed as 5.0% of y-axis max travel. Fail distance max and min are the 
+// travel of the other non-dual axis, i.e. if dual axis select is X_AXIS at 5.0%, then the fail
+// distance will be computed as 5.0% of y-axis max travel. Fail distance max and min are the
 // limits of how far or little a valid fail distance is.
 #define DUAL_AXIS_HOMING_FAIL_AXIS_LENGTH_PERCENT  5.0  // Float (percent)
 #define DUAL_AXIS_HOMING_FAIL_DISTANCE_MAX  25.0  // Float (mm)
@@ -341,15 +341,15 @@
 // NOTE: Protoneer CNC Shield v3.51 has A.STP and A.DIR wired to pins A4 and A3 respectively.
 #define DUAL_AXIS_CONFIG_PROTONEER_V3_51    // Uncomment to select. Comment other configs.
 
-// NOTE: Arduino CNC Shield Clone (Originally Protoneer v3.0) has A.STP and A.DIR wired to 
+// NOTE: Arduino CNC Shield Clone (Originally Protoneer v3.0) has A.STP and A.DIR wired to
 // D12 and D13, respectively. With the limit pins and stepper enable pin on this same port,
 // the spindle enable pin had to be moved and spindle direction pin deleted. The spindle
 // enable pin now resides on A3. Spindle enable is used far more and this pin setup helps
-// facilitate users to integrate this feature without arguably too much work. 
+// facilitate users to integrate this feature without arguably too much work.
 // Variable spindle (i.e. laser mode) does NOT work with this shield as configured. While
 // variable spindle technically can work with this shield, it requires too many changes for
 // most user setups to accomodate. It would best be implemented by sharing all limit switches
-// on pins D9/D10 (as [X1,Z]/[X2,Y] or [X,Y2]/[Y1,Z]), home each axis independently, and 
+// on pins D9/D10 (as [X1,Z]/[X2,Y] or [X,Y2]/[Y1,Z]), home each axis independently, and
 // updating lots of code to ensure everything is running correctly.
 // #define DUAL_AXIS_CONFIG_CNC_SHIELD_CLONE  // Uncomment to select. Comment other configs.
 

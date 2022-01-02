@@ -79,7 +79,7 @@
 // Define global system variables
 typedef struct {
   uint8_t state;               // Tracks the current system state of Grbl.
-  uint8_t abort;               // System abort flag. Forces exit back to main loop for reset.             
+  uint8_t abort;               // System abort flag. Forces exit back to main loop for reset.
   uint8_t suspend;             // System suspend bitflag variable that manages holds, cancels.
   uint8_t step_control;        // Governs the step segment generator depending on system state.
   uint8_t f_override;          // Feed rate override value in percent

@@ -489,7 +489,7 @@ void st_generate_step_dir_invert_masks()
   #ifdef ENABLE_DUAL_AXIS
     step_port_invert_mask_dual = 0;
     dir_port_invert_mask_dual = 0;
-    // NOTE: Dual axis invert uses the N_AXIS bit to set step and direction invert pins.    
+    // NOTE: Dual axis invert uses the N_AXIS bit to set step and direction invert pins.
     if (bit_istrue(settings.step_invert_mask,bit(N_AXIS))) { step_port_invert_mask_dual = (1<<DUAL_STEP_BIT); }
     if (bit_istrue(settings.dir_invert_mask,bit(N_AXIS))) { dir_port_invert_mask_dual = (1<<DUAL_DIRECTION_BIT); }
   #endif
@@ -518,7 +518,7 @@ void st_reset()
   // Initialize step and direction port pins.
   STEP_PORT = (STEP_PORT & ~STEP_MASK) | step_port_invert_mask;
   DIRECTION_PORT = (DIRECTION_PORT & ~DIRECTION_MASK) | dir_port_invert_mask;
-  
+
   #ifdef ENABLE_DUAL_AXIS
     st.dir_outbits_dual = dir_port_invert_mask_dual;
     STEP_PORT_DUAL = (STEP_PORT_DUAL & ~STEP_MASK_DUAL) | step_port_invert_mask_dual;
@@ -534,7 +534,7 @@ void stepper_init()
   STEP_DDR |= STEP_MASK;
   STEPPERS_DISABLE_DDR |= 1<<STEPPERS_DISABLE_BIT;
   DIRECTION_DDR |= DIRECTION_MASK;
-  
+
   #ifdef ENABLE_DUAL_AXIS
     STEP_DDR_DUAL |= STEP_MASK_DUAL;
     DIRECTION_DDR_DUAL |= DIRECTION_MASK_DUAL;
@@ -624,11 +624,11 @@ void st_prep_buffer()
         st_prep_block->direction_bits = pl_block->direction_bits;
         #ifdef ENABLE_DUAL_AXIS
           #if (DUAL_AXIS_SELECT == X_AXIS)
-            if (st_prep_block->direction_bits & (1<<X_DIRECTION_BIT)) { 
+            if (st_prep_block->direction_bits & (1<<X_DIRECTION_BIT)) {
           #elif (DUAL_AXIS_SELECT == Y_AXIS)
-            if (st_prep_block->direction_bits & (1<<Y_DIRECTION_BIT)) { 
+            if (st_prep_block->direction_bits & (1<<Y_DIRECTION_BIT)) {
           #endif
-            st_prep_block->direction_bits_dual = (1<<DUAL_DIRECTION_BIT); 
+            st_prep_block->direction_bits_dual = (1<<DUAL_DIRECTION_BIT);
           }  else { st_prep_block->direction_bits_dual = 0; }
         #endif
         uint8_t idx;
@@ -750,7 +750,7 @@ void st_prep_buffer()
 				}
 			}
     }
-    
+
     // Initialize new segment
     segment_t *prep_segment = &segment_buffer[segment_buffer_head];
 
@@ -854,7 +854,7 @@ void st_prep_buffer()
         }
       }
     } while (mm_remaining > prep.mm_complete); // **Complete** Exit loop. Profile complete.
-    
+
     /* -----------------------------------------------------------------------------------
        Compute segment step rate, steps to execute, and apply necessary rate corrections.
        NOTE: Steps are computed by direct scalar conversion of the millimeter distance

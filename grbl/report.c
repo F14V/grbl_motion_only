@@ -50,7 +50,7 @@ static void report_util_setting_string(uint8_t n) {
   serial_write('(');
   switch(n) {
     case 0: printPgmString(PSTR("stp pulse")); break;
-    case 1: printPgmString(PSTR("idl delay")); break; 
+    case 1: printPgmString(PSTR("idl delay")); break;
     case 2: printPgmString(PSTR("stp inv")); break;
     case 3: printPgmString(PSTR("dir inv")); break;
     case 4: printPgmString(PSTR("stp en inv")); break;
@@ -87,13 +87,13 @@ static void report_util_setting_string(uint8_t n) {
 }
 */
 
-static void report_util_uint8_setting(uint8_t n, int val) { 
-  report_util_setting_prefix(n); 
-  print_uint8_base10(val); 
-  report_util_line_feed(); // report_util_setting_string(n); 
+static void report_util_uint8_setting(uint8_t n, int val) {
+  report_util_setting_prefix(n);
+  print_uint8_base10(val);
+  report_util_line_feed(); // report_util_setting_string(n);
 }
-static void report_util_float_setting(uint8_t n, float val, uint8_t n_decimal) { 
-  report_util_setting_prefix(n); 
+static void report_util_float_setting(uint8_t n, float val, uint8_t n_decimal) {
+  report_util_setting_prefix(n);
   printFloat(val,n_decimal);
   report_util_line_feed(); // report_util_setting_string(n);
 }
@@ -164,7 +164,7 @@ void report_init_message()
 
 // Grbl help message
 void report_grbl_help() {
-  printPgmString(PSTR("[HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $SLP $C $X $H ~ ! ? ctrl-x]\r\n"));    
+  printPgmString(PSTR("[HLP:$$ $# $G $I $N $x=val $Nx=line $J=line $SLP $C $X $H ~ ! ? ctrl-x]\r\n"));
 }
 
 
@@ -247,8 +247,8 @@ void report_gcode_modes()
     switch (gc_state.modal.program_flow) {
       case PROGRAM_FLOW_PAUSED : serial_write('0'); break;
       // case PROGRAM_FLOW_OPTIONAL_STOP : serial_write('1'); break; // M1 is ignored and not supported.
-      case PROGRAM_FLOW_COMPLETED_M2 : 
-      case PROGRAM_FLOW_COMPLETED_M30 : 
+      case PROGRAM_FLOW_COMPLETED_M2 :
+      case PROGRAM_FLOW_COMPLETED_M30 :
         print_uint8_base10(gc_state.modal.program_flow);
         break;
     }
@@ -409,7 +409,7 @@ void report_realtime_status()
   // Report realtime feed speed
   #ifdef REPORT_FIELD_CURRENT_FEED_SPEED
     printPgmString(PSTR("|F:"));
-    printFloat_RateValue(st_get_realtime_rate()); 
+    printFloat_RateValue(st_get_realtime_rate());
   #endif
 
   #ifdef REPORT_FIELD_OVERRIDES

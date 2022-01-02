@@ -156,7 +156,7 @@ uint8_t gc_execute_line(char *line)
               if (!((mantissa == 0) || (mantissa == 10))) { FAIL(STATUS_GCODE_UNSUPPORTED_COMMAND); }
               gc_block.non_modal_command += mantissa;
               mantissa = 0; // Set to zero to indicate valid non-integer G command.
-            }                
+            }
             break;
           case 0: case 1: case 2: case 3: case 38:
             // Check for G0/1/2/3/38 being called with G10/28/30/92 on same block.
@@ -173,7 +173,7 @@ uint8_t gc_execute_line(char *line)
               }
               gc_block.modal.motion += (mantissa/10)+100;
               mantissa = 0; // Set to zero to indicate valid non-integer G command.
-            }  
+            }
             break;
           case 90: case 91:
             if (mantissa == 0) {
@@ -422,7 +422,7 @@ uint8_t gc_execute_line(char *line)
       // Determine coordinate system to change and try to load from EEPROM.
       if (coord_select > 0) { coord_select--; } // Adjust P1-P6 index to EEPROM coordinate data indexing.
       else { coord_select = gc_block.modal.coord_select; } // Index P0 as the active coordinate system
-      
+
       // NOTE: Store parameter data in IJK values. By rule, they are not in use with this command.
       if (!settings_read_coord_data(coord_select,gc_block.values.ijk)) { FAIL(STATUS_SETTING_READ_FAIL); } // [EEPROM read fail]
 
@@ -505,7 +505,7 @@ uint8_t gc_execute_line(char *line)
           // Axis words are optional. If missing, set axis command flag to ignore execution.
           if (!axis_words) { axis_command = AXIS_COMMAND_NONE; }
           break;
-        case MOTION_MODE_CW_ARC: 
+        case MOTION_MODE_CW_ARC:
           gc_parser_flags |= GC_PARSER_ARC_IS_CLOCKWISE; // No break intentional.
         case MOTION_MODE_CCW_ARC:
           // [G2/3 Errors All-Modes]: Feed rate undefined.
@@ -742,7 +742,7 @@ uint8_t gc_execute_line(char *line)
         mc_arc(gc_block.values.xyz, pl_data, gc_state.position, gc_block.values.ijk, gc_block.values.r,
             axis_0, axis_1, axis_linear, bit_istrue(gc_parser_flags,GC_PARSER_ARC_IS_CLOCKWISE));
       }
-     
+
       // As far as the parser is concerned, the position is now == target. In reality the
       // motion control system might still be processing the action and the real tool position
       // in any intermediate location.
@@ -751,7 +751,7 @@ uint8_t gc_execute_line(char *line)
       } else if (gc_update_pos == GC_UPDATE_POS_SYSTEM) {
         gc_sync_position(); // gc_state.position[] = sys_position
       } // == GC_UPDATE_POS_NONE
-    }     
+    }
   }
 
   // [21. Program flow ]:

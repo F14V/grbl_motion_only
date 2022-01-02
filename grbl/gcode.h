@@ -45,9 +45,9 @@
 
 // Define command actions for within execution-type modal groups (motion, stopping, non-modal). Used
 // internally by the parser to know which command to execute.
-// NOTE: Some macro values are assigned specific values to make g-code state reporting and parsing 
+// NOTE: Some macro values are assigned specific values to make g-code state reporting and parsing
 // compile a litte smaller. Necessary due to being completely out of flash on the 328p. Although not
-// ideal, just be careful with values that state 'do not alter' and check both report.c and gcode.c 
+// ideal, just be careful with values that state 'do not alter' and check both report.c and gcode.c
 // to see how they are used, if you need to alter them.
 
 // Modal Group G0: Non-modal actions
@@ -144,7 +144,7 @@ typedef struct {
 
 typedef struct {
   gc_modal_t modal;
-  
+
   float feed_rate;              // Millimeters/min
   int32_t line_number;          // Last line number sent
 

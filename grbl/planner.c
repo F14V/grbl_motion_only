@@ -328,7 +328,7 @@ uint8_t plan_buffer_line(float *target, plan_line_data_t *pl_data)
   uint8_t idx;
 
   // Copy position data based on type of motion being planned.
-  if (block->condition & PL_COND_FLAG_SYSTEM_MOTION) { 
+  if (block->condition & PL_COND_FLAG_SYSTEM_MOTION) {
     memcpy(position_steps, sys_position, sizeof(sys_position));
   } else { memcpy(position_steps, pl.position, sizeof(pl.position)); }
 
@@ -359,7 +359,7 @@ uint8_t plan_buffer_line(float *target, plan_line_data_t *pl_data)
 
   // Store programmed rate.
   if (block->condition & PL_COND_FLAG_RAPID_MOTION) { block->programmed_rate = block->rapid_rate; }
-  else { 
+  else {
     block->programmed_rate = pl_data->feed_rate;
     if (block->condition & PL_COND_FLAG_INVERSE_TIME) { block->programmed_rate *= block->millimeters; }
   }
@@ -425,7 +425,7 @@ uint8_t plan_buffer_line(float *target, plan_line_data_t *pl_data)
     float nominal_speed = plan_compute_profile_nominal_speed(block);
     plan_compute_profile_parameters(block, nominal_speed, pl.previous_nominal_speed);
     pl.previous_nominal_speed = nominal_speed;
-    
+
     // Update previous path unit_vector and planner position.
     memcpy(pl.previous_unit_vec, unit_vec, sizeof(unit_vec)); // pl.previous_unit_vec[] = unit_vec[]
     memcpy(pl.position, target_steps, sizeof(target_steps)); // pl.position[] = target_steps[]
