@@ -31,14 +31,7 @@
 // in the planner and to let backlash compensation or canned cycle integration simple and direct.
 void mc_line(float *target, plan_line_data_t *pl_data)
 {
-  // If enabled, check for soft limit violations. Placed here all line motions are picked up
-  // from everywhere in Grbl.
-  if (bit_istrue(settings.flags,BITFLAG_SOFT_LIMIT_ENABLE)) {
-    // NOTE: Block jog state. Jogging is a special case and soft limits are handled independently.
-    if (sys.state != STATE_JOG) { limits_soft_check(target); }
-  }
-
-  // If in check gcode mode, prevent motion by blocking planner. Soft limits still work.
+  // If in check gcode mode, prevent motion by blocking planner.
   if (sys.state == STATE_CHECK_MODE) { return; }
 
   // NOTE: Backlash compensation may be installed here. It will need direction info to track when
@@ -66,13 +59,6 @@ void mc_line(float *target, plan_line_data_t *pl_data)
 
   // Plan and queue motion into planner buffer
   if (plan_buffer_line(target, pl_data) == PLAN_EMPTY_BLOCK) {
-    if (bit_istrue(settings.flags,BITFLAG_LASER_MODE)) {
-      // Correctly set spindle state, if there is a coincident position passed. Forces a buffer
-      // sync while in M3 laser mode only.
-      if (pl_data->condition & PL_COND_FLAG_SPINDLE_CW) {
-        spindle_sync(PL_COND_FLAG_SPINDLE_CW, pl_data->spindle_speed);
-      }
-    }
   }
 }
 
@@ -200,188 +186,24 @@ void mc_dwell(float seconds)
 }
 
 
-// Perform homing cycle to locate and set machine zero. Only '$H' executes this command.
-// NOTE: There should be no motions in the buffer and Grbl must be in an idle state before
-// executing the homing cycle. This prevents incorrect buffered plans after homing.
-void mc_homing_cycle(uint8_t cycle_mask)
-{
-  // Check and abort homing cycle, if hard limits are already enabled. Helps prevent problems
-  // with machines with limits wired on both ends of travel to one limit pin.
-  // TODO: Move the pin-specific LIMIT_PIN call to limits.c as a function.
-  #ifdef LIMITS_TWO_SWITCHES_ON_AXES
-    if (limits_get_state()) {
-      mc_reset(); // Issue system reset and ensure spindle and coolant are shutdown.
-      system_set_exec_alarm(EXEC_ALARM_HARD_LIMIT);
-      return;
-    }
-  #endif
-
-  limits_disable(); // Disable hard limits pin change register for cycle duration
-
-  // -------------------------------------------------------------------------------------
-  // Perform homing routine. NOTE: Special motion case. Only system reset works.
-  
-  #ifdef HOMING_SINGLE_AXIS_COMMANDS
-    if (cycle_mask) { limits_go_home(cycle_mask); } // Perform homing cycle based on mask.
-    else
-  #endif
-  {
-    // Search to engage all axes limit switches at faster homing seek rate.
-    limits_go_home(HOMING_CYCLE_0);  // Homing cycle 0
-    #ifdef HOMING_CYCLE_1
-      limits_go_home(HOMING_CYCLE_1);  // Homing cycle 1
-    #endif
-    #ifdef HOMING_CYCLE_2
-      limits_go_home(HOMING_CYCLE_2);  // Homing cycle 2
-    #endif
-  }
-
-  protocol_execute_realtime(); // Check for reset and set system abort.
-  if (sys.abort) { return; } // Did not complete. Alarm state set by mc_alarm.
-
-  // Homing cycle complete! Setup system for normal operation.
-  // -------------------------------------------------------------------------------------
-
-  // Sync gcode parser and planner positions to homed position.
-  gc_sync_position();
-  plan_sync_position();
-
-  // If hard limits feature enabled, re-enable hard limits pin change register after homing cycle.
-  limits_init();
-}
-
-
-// Perform tool length probe cycle. Requires probe switch.
-// NOTE: Upon probe failure, the program will be stopped and placed into ALARM state.
-uint8_t mc_probe_cycle(float *target, plan_line_data_t *pl_data, uint8_t parser_flags)
-{
-  // TODO: Need to update this cycle so it obeys a non-auto cycle start.
-  if (sys.state == STATE_CHECK_MODE) { return(GC_PROBE_CHECK_MODE); }
-
-  // Finish all queued commands and empty planner buffer before starting probe cycle.
-  protocol_buffer_synchronize();
-  if (sys.abort) { return(GC_PROBE_ABORT); } // Return if system reset has been issued.
-
-  // Initialize probing control variables
-  uint8_t is_probe_away = bit_istrue(parser_flags,GC_PARSER_PROBE_IS_AWAY);
-  uint8_t is_no_error = bit_istrue(parser_flags,GC_PARSER_PROBE_IS_NO_ERROR);
-  sys.probe_succeeded = false; // Re-initialize probe history before beginning cycle.
-  probe_configure_invert_mask(is_probe_away);
-
-  // After syncing, check if probe is already triggered. If so, halt and issue alarm.
-  // NOTE: This probe initialization error applies to all probing cycles.
-  if ( probe_get_state() ) { // Check probe pin state.
-    system_set_exec_alarm(EXEC_ALARM_PROBE_FAIL_INITIAL);
-    protocol_execute_realtime();
-    probe_configure_invert_mask(false); // Re-initialize invert mask before returning.
-    return(GC_PROBE_FAIL_INIT); // Nothing else to do but bail.
-  }
-
-  // Setup and queue probing motion. Auto cycle-start should not start the cycle.
-  mc_line(target, pl_data);
-
-  // Activate the probing state monitor in the stepper module.
-  sys_probe_state = PROBE_ACTIVE;
-
-  // Perform probing cycle. Wait here until probe is triggered or motion completes.
-  system_set_exec_state_flag(EXEC_CYCLE_START);
-  do {
-    protocol_execute_realtime();
-    if (sys.abort) { return(GC_PROBE_ABORT); } // Check for system abort
-  } while (sys.state != STATE_IDLE);
-
-  // Probing cycle complete!
-
-  // Set state variables and error out, if the probe failed and cycle with error is enabled.
-  if (sys_probe_state == PROBE_ACTIVE) {
-    if (is_no_error) { memcpy(sys_probe_position, sys_position, sizeof(sys_position)); }
-    else { system_set_exec_alarm(EXEC_ALARM_PROBE_FAIL_CONTACT); }
-  } else {
-    sys.probe_succeeded = true; // Indicate to system the probing cycle completed successfully.
-  }
-  sys_probe_state = PROBE_OFF; // Ensure probe state monitor is disabled.
-  probe_configure_invert_mask(false); // Re-initialize invert mask.
-  protocol_execute_realtime();   // Check and execute run-time commands
-
-  // Reset the stepper and planner buffers to remove the remainder of the probe motion.
-  st_reset(); // Reset step segment buffer.
-  plan_reset(); // Reset planner buffer. Zero planner positions. Ensure probing motion is cleared.
-  plan_sync_position(); // Sync planner position to current machine position.
-
-  #ifdef MESSAGE_PROBE_COORDINATES
-    // All done! Output the probe position as message.
-    report_probe_parameters();
-  #endif
-
-  if (sys.probe_succeeded) { return(GC_PROBE_FOUND); } // Successful probe cycle.
-  else { return(GC_PROBE_FAIL_END); } // Failed to trigger probe within travel. With or without error.
-}
-
-
-// Plans and executes the single special motion case for parking. Independent of main planner buffer.
-// NOTE: Uses the always free planner ring buffer head to store motion parameters for execution.
-#ifdef PARKING_ENABLE
-  void mc_parking_motion(float *parking_target, plan_line_data_t *pl_data)
-  {
-    if (sys.abort) { return; } // Block during abort.
-
-    uint8_t plan_status = plan_buffer_line(parking_target, pl_data);
-
-    if (plan_status) {
-      bit_true(sys.step_control, STEP_CONTROL_EXECUTE_SYS_MOTION);
-      bit_false(sys.step_control, STEP_CONTROL_END_MOTION); // Allow parking motion to execute, if feed hold is active.
-      st_parking_setup_buffer(); // Setup step segment buffer for special parking motion case
-      st_prep_buffer();
-      st_wake_up();
-      do {
-        protocol_exec_rt_system();
-        if (sys.abort) { return; }
-      } while (sys.step_control & STEP_CONTROL_EXECUTE_SYS_MOTION);
-      st_parking_restore_buffer(); // Restore step segment buffer to normal run state.
-    } else {
-      bit_false(sys.step_control, STEP_CONTROL_EXECUTE_SYS_MOTION);
-      protocol_exec_rt_system();
-    }
-
-  }
-#endif
-
-
-#ifdef ENABLE_PARKING_OVERRIDE_CONTROL
-  void mc_override_ctrl_update(uint8_t override_state)
-  {
-    // Finish all queued commands before altering override control state
-    protocol_buffer_synchronize();
-    if (sys.abort) { return; }
-    sys.override_ctrl = override_state;
-  }
-#endif
-
-
 // Method to ready the system to reset by setting the realtime reset command and killing any
 // active processes in the system. This also checks if a system reset is issued while Grbl
 // is in a motion state. If so, kills the steppers and sets the system alarm to flag position
 // lost, since there was an abrupt uncontrolled deceleration. Called at an interrupt level by
-// realtime abort command and hard limits. So, keep to a minimum.
+// realtime abort command. So, keep to a minimum.
 void mc_reset()
 {
   // Only this function can set the system reset. Helps prevent multiple kill calls.
   if (bit_isfalse(sys_rt_exec_state, EXEC_RESET)) {
     system_set_exec_state_flag(EXEC_RESET);
 
-    // Kill spindle and coolant.
-    spindle_stop();
-    coolant_stop();
-
     // Kill steppers only if in any motion state, i.e. cycle, actively holding, or homing.
     // NOTE: If steppers are kept enabled via the step idle delay setting, this also keeps
     // the steppers enabled by avoiding the go_idle call altogether, unless the motion state is
     // violated, by which, all bets are off.
-    if ((sys.state & (STATE_CYCLE | STATE_HOMING | STATE_JOG)) ||
+    if ((sys.state & (STATE_CYCLE | STATE_JOG)) ||
     		(sys.step_control & (STEP_CONTROL_EXECUTE_HOLD | STEP_CONTROL_EXECUTE_SYS_MOTION))) {
-      if (sys.state == STATE_HOMING) { 
-        if (!sys_rt_exec_alarm) {system_set_exec_alarm(EXEC_ALARM_HOMING_FAIL_RESET); }
-      } else { system_set_exec_alarm(EXEC_ALARM_ABORT_CYCLE); }
+      system_set_exec_alarm(EXEC_ALARM_ABORT_CYCLE);
       st_go_idle(); // Force kill steppers. Position has likely been lost.
     }
   }

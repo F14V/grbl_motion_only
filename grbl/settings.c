@@ -31,33 +31,28 @@ const __flash settings_t defaults = {\
     .status_report_mask = DEFAULT_STATUS_REPORT_MASK,
     .junction_deviation = DEFAULT_JUNCTION_DEVIATION,
     .arc_tolerance = DEFAULT_ARC_TOLERANCE,
-    .rpm_max = DEFAULT_SPINDLE_RPM_MAX,
-    .rpm_min = DEFAULT_SPINDLE_RPM_MIN,
-    .homing_dir_mask = DEFAULT_HOMING_DIR_MASK,
-    .homing_feed_rate = DEFAULT_HOMING_FEED_RATE,
-    .homing_seek_rate = DEFAULT_HOMING_SEEK_RATE,
-    .homing_debounce_delay = DEFAULT_HOMING_DEBOUNCE_DELAY,
-    .homing_pulloff = DEFAULT_HOMING_PULLOFF,
-    .flags = (DEFAULT_REPORT_INCHES << BIT_REPORT_INCHES) | \
-             (DEFAULT_LASER_MODE << BIT_LASER_MODE) | \
-             (DEFAULT_INVERT_ST_ENABLE << BIT_INVERT_ST_ENABLE) | \
-             (DEFAULT_HARD_LIMIT_ENABLE << BIT_HARD_LIMIT_ENABLE) | \
-             (DEFAULT_HOMING_ENABLE << BIT_HOMING_ENABLE) | \
-             (DEFAULT_SOFT_LIMIT_ENABLE << BIT_SOFT_LIMIT_ENABLE) | \
-             (DEFAULT_INVERT_LIMIT_PINS << BIT_INVERT_LIMIT_PINS) | \
-             (DEFAULT_INVERT_PROBE_PIN << BIT_INVERT_PROBE_PIN),
+    .flags = (DEFAULT_INVERT_ST_ENABLE << BIT_INVERT_ST_ENABLE),
     .steps_per_mm[X_AXIS] = DEFAULT_X_STEPS_PER_MM,
     .steps_per_mm[Y_AXIS] = DEFAULT_Y_STEPS_PER_MM,
-    .steps_per_mm[Z_AXIS] = DEFAULT_Z_STEPS_PER_MM,
+    #ifdef Z_AXIS
+      .steps_per_mm[Z_AXIS] = DEFAULT_Z_STEPS_PER_MM,
+    #endif
     .max_rate[X_AXIS] = DEFAULT_X_MAX_RATE,
     .max_rate[Y_AXIS] = DEFAULT_Y_MAX_RATE,
-    .max_rate[Z_AXIS] = DEFAULT_Z_MAX_RATE,
+    #ifdef Z_AXIS
+      .max_rate[Z_AXIS] = DEFAULT_Z_MAX_RATE,
+    #endif
     .acceleration[X_AXIS] = DEFAULT_X_ACCELERATION,
     .acceleration[Y_AXIS] = DEFAULT_Y_ACCELERATION,
-    .acceleration[Z_AXIS] = DEFAULT_Z_ACCELERATION,
+    #ifdef Z_AXIS
+      .acceleration[Z_AXIS] = DEFAULT_Z_ACCELERATION,
+    #endif
     .max_travel[X_AXIS] = (-DEFAULT_X_MAX_TRAVEL),
     .max_travel[Y_AXIS] = (-DEFAULT_Y_MAX_TRAVEL),
-    .max_travel[Z_AXIS] = (-DEFAULT_Z_MAX_TRAVEL)};
+    #ifdef Z_AXIS
+      .max_travel[Z_AXIS] = (-DEFAULT_Z_MAX_TRAVEL)
+    #endif
+    };
 
 
 // Method to store startup lines into EEPROM
@@ -244,56 +239,9 @@ uint8_t settings_store_global_setting(uint8_t parameter, float value) {
         if (int_value) { settings.flags |= BITFLAG_INVERT_ST_ENABLE; }
         else { settings.flags &= ~BITFLAG_INVERT_ST_ENABLE; }
         break;
-      case 5: // Reset to ensure change. Immediate re-init may cause problems.
-        if (int_value) { settings.flags |= BITFLAG_INVERT_LIMIT_PINS; }
-        else { settings.flags &= ~BITFLAG_INVERT_LIMIT_PINS; }
-        break;
-      case 6: // Reset to ensure change. Immediate re-init may cause problems.
-        if (int_value) { settings.flags |= BITFLAG_INVERT_PROBE_PIN; }
-        else { settings.flags &= ~BITFLAG_INVERT_PROBE_PIN; }
-        probe_configure_invert_mask(false);
-        break;
       case 10: settings.status_report_mask = int_value; break;
       case 11: settings.junction_deviation = value; break;
       case 12: settings.arc_tolerance = value; break;
-      case 13:
-        if (int_value) { settings.flags |= BITFLAG_REPORT_INCHES; }
-        else { settings.flags &= ~BITFLAG_REPORT_INCHES; }
-        system_flag_wco_change(); // Make sure WCO is immediately updated.
-        break;
-      case 20:
-        if (int_value) {
-          if (bit_isfalse(settings.flags, BITFLAG_HOMING_ENABLE)) { return(STATUS_SOFT_LIMIT_ERROR); }
-          settings.flags |= BITFLAG_SOFT_LIMIT_ENABLE;
-        } else { settings.flags &= ~BITFLAG_SOFT_LIMIT_ENABLE; }
-        break;
-      case 21:
-        if (int_value) { settings.flags |= BITFLAG_HARD_LIMIT_ENABLE; }
-        else { settings.flags &= ~BITFLAG_HARD_LIMIT_ENABLE; }
-        limits_init(); // Re-init to immediately change. NOTE: Nice to have but could be problematic later.
-        break;
-      case 22:
-        if (int_value) { settings.flags |= BITFLAG_HOMING_ENABLE; }
-        else {
-          settings.flags &= ~BITFLAG_HOMING_ENABLE;
-          settings.flags &= ~BITFLAG_SOFT_LIMIT_ENABLE; // Force disable soft-limits.
-        }
-        break;
-      case 23: settings.homing_dir_mask = int_value; break;
-      case 24: settings.homing_feed_rate = value; break;
-      case 25: settings.homing_seek_rate = value; break;
-      case 26: settings.homing_debounce_delay = int_value; break;
-      case 27: settings.homing_pulloff = value; break;
-      case 30: settings.rpm_max = value; spindle_init(); break; // Re-initialize spindle rpm calibration
-      case 31: settings.rpm_min = value; spindle_init(); break; // Re-initialize spindle rpm calibration
-      case 32:
-        #ifdef VARIABLE_SPINDLE
-          if (int_value) { settings.flags |= BITFLAG_LASER_MODE; }
-          else { settings.flags &= ~BITFLAG_LASER_MODE; }
-        #else
-          return(STATUS_SETTING_DISABLED_LASER);
-        #endif
-        break;
       default:
         return(STATUS_INVALID_STATEMENT);
     }
@@ -318,7 +266,10 @@ uint8_t get_step_pin_mask(uint8_t axis_idx)
 {
   if ( axis_idx == X_AXIS ) { return((1<<X_STEP_BIT)); }
   if ( axis_idx == Y_AXIS ) { return((1<<Y_STEP_BIT)); }
-  return((1<<Z_STEP_BIT));
+  #ifdef Z_AXIS
+    return((1<<Z_STEP_BIT));
+  #endif
+  return 0;
 }
 
 
@@ -327,14 +278,8 @@ uint8_t get_direction_pin_mask(uint8_t axis_idx)
 {
   if ( axis_idx == X_AXIS ) { return((1<<X_DIRECTION_BIT)); }
   if ( axis_idx == Y_AXIS ) { return((1<<Y_DIRECTION_BIT)); }
-  return((1<<Z_DIRECTION_BIT));
-}
-
-
-// Returns limit pin mask according to Grbl internal axis indexing.
-uint8_t get_limit_pin_mask(uint8_t axis_idx)
-{
-  if ( axis_idx == X_AXIS ) { return((1<<X_LIMIT_BIT)); }
-  if ( axis_idx == Y_AXIS ) { return((1<<Y_LIMIT_BIT)); }
-  return((1<<Z_LIMIT_BIT));
+  #ifdef Z_AXIS
+    return((1<<Z_DIRECTION_BIT));
+  #endif
+  return 0;
 }

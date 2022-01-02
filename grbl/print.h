@@ -40,8 +40,8 @@ void print_uint8_base2_ndigit(uint8_t n, uint8_t digits);
 void printFloat(float n, uint8_t decimal_places);
 
 // Floating value printing handlers for special variables types used in Grbl.
-//  - CoordValue: Handles all position or coordinate values in inches or mm reporting.
-//  - RateValue: Handles feed rate and current velocity in inches or mm reporting.
+//  - CoordValue: Handles all position or coordinate values in mm reporting.
+//  - RateValue: Handles feed rate and current velocity in mm reporting.
 void printFloat_CoordValue(float n);
 void printFloat_RateValue(float n);
 

@@ -170,22 +170,14 @@ void printFloat(float n, uint8_t decimal_places)
 
 // Floating value printing handlers for special variables types used in Grbl and are defined
 // in the config.h.
-//  - CoordValue: Handles all position or coordinate values in inches or mm reporting.
-//  - RateValue: Handles feed rate and current velocity in inches or mm reporting.
+//  - CoordValue: Handles all position or coordinate values in mm reporting.
+//  - RateValue: Handles feed rate and current velocity in mm reporting.
 void printFloat_CoordValue(float n) {
-  if (bit_istrue(settings.flags,BITFLAG_REPORT_INCHES)) {
-    printFloat(n*INCH_PER_MM,N_DECIMAL_COORDVALUE_INCH);
-  } else {
-    printFloat(n,N_DECIMAL_COORDVALUE_MM);
-  }
+  printFloat(n,N_DECIMAL_COORDVALUE_MM);
 }
 
 void printFloat_RateValue(float n) {
-  if (bit_istrue(settings.flags,BITFLAG_REPORT_INCHES)) {
-    printFloat(n*INCH_PER_MM,N_DECIMAL_RATEVALUE_INCH);
-  } else {
-    printFloat(n,N_DECIMAL_RATEVALUE_MM);
-  }
+  printFloat(n,N_DECIMAL_RATEVALUE_MM);
 }
 
 // Debug tool to print free memory in bytes at the called point.

@@ -37,13 +37,10 @@
 #define MODAL_GROUP_G5 5 // [G93,G94] Feed rate mode
 #define MODAL_GROUP_G6 6 // [G20,G21] Units
 #define MODAL_GROUP_G7 7 // [G40] Cutter radius compensation mode. G41/42 NOT SUPPORTED.
-#define MODAL_GROUP_G8 8 // [G43.1,G49] Tool length offset
 #define MODAL_GROUP_G12 9 // [G54,G55,G56,G57,G58,G59] Coordinate system selection
 #define MODAL_GROUP_G13 10 // [G61] Control mode
 
 #define MODAL_GROUP_M4 11  // [M0,M1,M2,M30] Stopping
-#define MODAL_GROUP_M7 12 // [M3,M4,M5] Spindle turning
-#define MODAL_GROUP_M8 13 // [M7,M8,M9] Coolant control
 #define MODAL_GROUP_M9 14 // [M56] Override control
 
 // Define command actions for within execution-type modal groups (motion, stopping, non-modal). Used
@@ -57,29 +54,14 @@
 #define NON_MODAL_NO_ACTION 0 // (Default: Must be zero)
 #define NON_MODAL_DWELL 4 // G4 (Do not alter value)
 #define NON_MODAL_SET_COORDINATE_DATA 10 // G10 (Do not alter value)
-#define NON_MODAL_GO_HOME_0 28 // G28 (Do not alter value)
-#define NON_MODAL_SET_HOME_0 38 // G28.1 (Do not alter value)
-#define NON_MODAL_GO_HOME_1 30 // G30 (Do not alter value)
-#define NON_MODAL_SET_HOME_1 40 // G30.1 (Do not alter value)
 #define NON_MODAL_ABSOLUTE_OVERRIDE 53 // G53 (Do not alter value)
-#define NON_MODAL_SET_COORDINATE_OFFSET 92 // G92 (Do not alter value)
-#define NON_MODAL_RESET_COORDINATE_OFFSET 102 //G92.1 (Do not alter value)
 
 // Modal Group G1: Motion modes
 #define MOTION_MODE_SEEK 0 // G0 (Default: Must be zero)
 #define MOTION_MODE_LINEAR 1 // G1 (Do not alter value)
 #define MOTION_MODE_CW_ARC 2  // G2 (Do not alter value)
 #define MOTION_MODE_CCW_ARC 3  // G3 (Do not alter value)
-#define MOTION_MODE_PROBE_TOWARD 140 // G38.2 (Do not alter value)
-#define MOTION_MODE_PROBE_TOWARD_NO_ERROR 141 // G38.3 (Do not alter value)
-#define MOTION_MODE_PROBE_AWAY 142 // G38.4 (Do not alter value)
-#define MOTION_MODE_PROBE_AWAY_NO_ERROR 143 // G38.5 (Do not alter value)
 #define MOTION_MODE_NONE 80 // G80 (Do not alter value)
-
-// Modal Group G2: Plane select
-#define PLANE_SELECT_XY 0 // G17 (Default: Must be zero)
-#define PLANE_SELECT_ZX 1 // G18 (Do not alter value)
-#define PLANE_SELECT_YZ 2 // G19 (Do not alter value)
 
 // Modal Group G3: Distance mode
 #define DISTANCE_MODE_ABSOLUTE 0 // G90 (Default: Must be zero)
@@ -101,36 +83,12 @@
 
 // Modal Group G6: Units mode
 #define UNITS_MODE_MM 0 // G21 (Default: Must be zero)
-#define UNITS_MODE_INCHES 1 // G20 (Do not alter value)
 
 // Modal Group G7: Cutter radius compensation mode
 #define CUTTER_COMP_DISABLE 0 // G40 (Default: Must be zero)
 
 // Modal Group G13: Control mode
 #define CONTROL_MODE_EXACT_PATH 0 // G61 (Default: Must be zero)
-
-// Modal Group M7: Spindle control
-#define SPINDLE_DISABLE 0 // M5 (Default: Must be zero)
-#define SPINDLE_ENABLE_CW   PL_COND_FLAG_SPINDLE_CW // M3 (NOTE: Uses planner condition bit flag)
-#define SPINDLE_ENABLE_CCW  PL_COND_FLAG_SPINDLE_CCW // M4 (NOTE: Uses planner condition bit flag)
-
-// Modal Group M8: Coolant control
-#define COOLANT_DISABLE 0 // M9 (Default: Must be zero)
-#define COOLANT_FLOOD_ENABLE  PL_COND_FLAG_COOLANT_FLOOD // M8 (NOTE: Uses planner condition bit flag)
-#define COOLANT_MIST_ENABLE   PL_COND_FLAG_COOLANT_MIST  // M7 (NOTE: Uses planner condition bit flag)
-
-// Modal Group G8: Tool length offset
-#define TOOL_LENGTH_OFFSET_CANCEL 0 // G49 (Default: Must be zero)
-#define TOOL_LENGTH_OFFSET_ENABLE_DYNAMIC 1 // G43.1
-
-// Modal Group M9: Override control
-#ifdef DEACTIVATE_PARKING_UPON_INIT
-  #define OVERRIDE_DISABLED  0 // (Default: Must be zero)
-  #define OVERRIDE_PARKING_MOTION 1 // M56
-#else
-  #define OVERRIDE_PARKING_MOTION 0 // M56 (Default: Must be zero)
-  #define OVERRIDE_DISABLED  1 // Parking disabled.
-#endif
 
 // Modal Group G12: Active work coordinate system
 // N/A: Stores coordinate system value (54-59) to change to.
@@ -145,7 +103,6 @@
 #define WORD_P  6
 #define WORD_R  7
 #define WORD_S  8
-#define WORD_T  9
 #define WORD_X  10
 #define WORD_Y  11
 #define WORD_Z  12
@@ -155,27 +112,11 @@
 #define GC_UPDATE_POS_SYSTEM   1
 #define GC_UPDATE_POS_NONE     2
 
-// Define probe cycle exit states and assign proper position updating.
-#define GC_PROBE_FOUND      GC_UPDATE_POS_SYSTEM
-#define GC_PROBE_ABORT      GC_UPDATE_POS_NONE
-#define GC_PROBE_FAIL_INIT  GC_UPDATE_POS_NONE
-#define GC_PROBE_FAIL_END   GC_UPDATE_POS_TARGET
-#ifdef SET_CHECK_MODE_PROBE_TO_START
-  #define GC_PROBE_CHECK_MODE   GC_UPDATE_POS_NONE  
-#else
-  #define GC_PROBE_CHECK_MODE   GC_UPDATE_POS_TARGET
-#endif
-
 // Define gcode parser flags for handling special cases.
 #define GC_PARSER_NONE                  0 // Must be zero.
 #define GC_PARSER_JOG_MOTION            bit(0)
 #define GC_PARSER_CHECK_MANTISSA        bit(1)
 #define GC_PARSER_ARC_IS_CLOCKWISE      bit(2)
-#define GC_PARSER_PROBE_IS_AWAY         bit(3)
-#define GC_PARSER_PROBE_IS_NO_ERROR     bit(4)
-#define GC_PARSER_LASER_FORCE_SYNC      bit(5)
-#define GC_PARSER_LASER_DISABLE         bit(6)
-#define GC_PARSER_LASER_ISMOTION        bit(7)
 
 
 // NOTE: When this struct is zeroed, the above defines set the defaults for the system.
@@ -184,15 +125,8 @@ typedef struct {
   uint8_t feed_rate;       // {G93,G94}
   uint8_t units;           // {G20,G21}
   uint8_t distance;        // {G90,G91}
-  // uint8_t distance_arc; // {G91.1} NOTE: Don't track. Only default supported.
-  uint8_t plane_select;    // {G17,G18,G19}
-  // uint8_t cutter_comp;  // {G40} NOTE: Don't track. Only default supported.
-  uint8_t tool_length;     // {G43.1,G49}
   uint8_t coord_select;    // {G54,G55,G56,G57,G58,G59}
-  // uint8_t control;      // {G61} NOTE: Don't track. Only default supported.
   uint8_t program_flow;    // {M0,M1,M2,M30}
-  uint8_t coolant;         // {M7,M8,M9}
-  uint8_t spindle;         // {M3,M4,M5}
   uint8_t override;        // {M56}
 } gc_modal_t;
 
@@ -204,18 +138,14 @@ typedef struct {
   float p;         // G10 or dwell parameters
   // float q;      // G82 peck drilling
   float r;         // Arc radius
-  float s;         // Spindle speed
-  uint8_t t;       // Tool selection
   float xyz[3];    // X,Y,Z Translational axes
 } gc_values_t;
 
 
 typedef struct {
   gc_modal_t modal;
-
-  float spindle_speed;          // RPM
+  
   float feed_rate;              // Millimeters/min
-  uint8_t tool;                 // Tracks tool number. NOT USED.
   int32_t line_number;          // Last line number sent
 
   float position[N_AXIS];       // Where the interpreter considers the tool to be at this point in the code
@@ -224,7 +154,6 @@ typedef struct {
                                  // position in mm. Loaded from EEPROM when called.
   float coord_offset[N_AXIS];    // Retains the G92 coordinate offset (work coordinates) relative to
                                  // machine zero in mm. Non-persistent. Cleared upon reset and boot.
-  float tool_length_offset;      // Tracks tool length offset value when enabled.
 } parser_state_t;
 extern parser_state_t gc_state;
 

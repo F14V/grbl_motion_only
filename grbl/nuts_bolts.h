@@ -28,22 +28,16 @@
 #define SOME_LARGE_VALUE 1.0E+38
 
 // Axis array index values. Must start with 0 and be continuous.
-#define N_AXIS 3 // Number of axes
+#ifndef N_AXIS
+  #define N_AXIS 3
+#endif
 #define X_AXIS 0 // Axis indexing value.
 #define Y_AXIS 1
-#define Z_AXIS 2
-// #define A_AXIS 3
-
-// CoreXY motor assignments. DO NOT ALTER.
-// NOTE: If the A and B motor axis bindings are changed, this effects the CoreXY equations.
-#ifdef COREXY
- #define A_MOTOR X_AXIS // Must be X_AXIS
- #define B_MOTOR Y_AXIS // Must be Y_AXIS
+#if N_AXIS > 2
+  #define Z_AXIS 2
 #endif
 
 // Conversions
-#define MM_PER_INCH (25.40)
-#define INCH_PER_MM (0.0393701)
 #define TICKS_PER_MICROSECOND (F_CPU/1000000)
 
 #define DELAY_MODE_DWELL       0
